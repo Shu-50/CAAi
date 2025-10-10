@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  
+}
+
+model Bill {
+  id        Int       @id @default(autoincrement())
+  vendor    String?
+  date      DateTime?
+  total     Float?
+  
+  createdAt DateTime  @default(now())
+  items     Item[]
+}
+
+model Item {
+  id       Int     @id @default(autoincrement())
+  name     String?
+  qty      Int?
+  price    Float?
+  gst      Float?
+  cgst     Float?
+  sgst     Float?
+  category String?
+  billId   Int
+  bill     Bill    @relation(fields: [billId], references: [id])
+}

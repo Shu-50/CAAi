@@ -1,23 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSettings } from '../hooks/useSettings.jsx';
+import DataExport from './DataExport';
 
 const Settings = () => {
-    const [settings, setSettings] = useState({
-        currency: 'INR',
-        dateFormat: 'DD/MM/YYYY',
-        theme: 'dark',
-        notifications: true,
-        autoBackup: false,
-        defaultCategory: 'others',
-        budgetAlerts: true,
-        monthlyBudget: 50000
-    });
-
+    const { settings, updateSettings, loading } = useSettings();
     const [activeTab, setActiveTab] = useState('general');
+    const [localSettings, setLocalSettings] = useState(settings);
 
-    const handleSettingChange = (key, value) => {
-        setSettings(prev => ({ ...prev, [key]: value }));
-        // Here you would typically save to localStorage or send to backend
-        localStorage.setItem('billTrackerSettings', JSON.stringify({ ...settings, [key]: value }));
+    // Sync local settings when global settings change
+    useEffect(() => {
+        setLocalSettings(settings);
+    }, [settings]);
+
+    const handleSettingChange = async (key, value) => {
+        const newSettings = { ...localSettings, [key]: value };
+        setLocalSettings(newSettings);
+
+        try {
+            await updateSettings(newSettings);
+            showNotification('Settings updated successfully!', 'success');
+        } catch (error) {
+            showNotification('Failed to update settings', 'error');
+        }
+    };
+
+    const showNotification = (message, type) => {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            } text-white`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => document.body.removeChild(notification), 3000);
     };
 
     const exportData = () => {
@@ -51,20 +64,20 @@ const Settings = () => {
         <div className="space-y-6 animate-fadeIn">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-[#f0f6fc]">Settings</h1>
-                <p className="text-[#8b949e] mt-1">Customize your BillTracker experience</p>
+                <h1 className="text-3xl font-bold text-theme-primary">Settings</h1>
+                <p className="text-theme-secondary mt-1">Customize your BillTracker experience</p>
             </div>
 
             {/* Tabs */}
-            <div className="bg-[#161b22] rounded-xl border border-[#30363d]">
-                <div className="flex border-b border-[#30363d]">
+            <div className="bg-theme-secondary rounded-xl border border-theme-primary">
+                <div className="flex border-b border-theme-primary">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center space-x-2 px-6 py-4 font-medium transition-colors ${activeTab === tab.id
                                 ? 'text-blue-400 border-b-2 border-blue-400'
-                                : 'text-gray-400 hover:text-white'
+                                : 'text-theme-secondary hover:text-theme-primary'
                                 }`}
                         >
                             <span>{tab.icon}</span>
@@ -78,7 +91,7 @@ const Settings = () => {
                     {activeTab === 'general' && (
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-semibold text-white mb-4">General Preferences</h3>
+                                <h3 className="text-lg font-semibold text-theme-primary mb-4">General Preferences</h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
@@ -86,9 +99,9 @@ const Settings = () => {
                                             Default Currency
                                         </label>
                                         <select
-                                            value={settings.currency}
+                                            value={localSettings.currency}
                                             onChange={(e) => handleSettingChange('currency', e.target.value)}
-                                            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full p-3 bg-theme-tertiary border border-theme-primary rounded-lg text-theme-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         >
                                             <option value="INR">Indian Rupee (₹)</option>
                                             <option value="USD">US Dollar ($)</option>
@@ -150,7 +163,7 @@ const Settings = () => {
                     {activeTab === 'appearance' && (
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-semibold text-white mb-4">Appearance</h3>
+                                <h3 className="text-lg font-semibold text-theme-primary mb-4">Appearance</h3>
 
                                 <div className="space-y-4">
                                     <div>
@@ -171,16 +184,16 @@ const Settings = () => {
                                                         <div className="text-2xl mb-2">
                                                             {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '🔄'}
                                                         </div>
-                                                        <p className="text-white font-medium capitalize">{theme}</p>
+                                                        <p className="text-theme-primary font-medium capitalize">{theme}</p>
                                                     </div>
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="p-4 bg-yellow-600/20 border border-yellow-600/30 rounded-lg">
-                                        <p className="text-yellow-400 text-sm">
-                                            💡 Theme changes will be available in a future update. Currently using dark theme.
+                                    <div className="p-4 bg-green-600/20 border border-green-600/30 rounded-lg">
+                                        <p className="text-green-400 text-sm">
+                                            ✅ Theme switching is now fully functional! Changes apply immediately.
                                         </p>
                                     </div>
                                 </div>
@@ -192,12 +205,12 @@ const Settings = () => {
                     {activeTab === 'notifications' && (
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-semibold text-white mb-4">Notifications</h3>
+                                <h3 className="text-lg font-semibold text-theme-primary mb-4">Notifications</h3>
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
                                         <div>
-                                            <h4 className="text-white font-medium">Push Notifications</h4>
+                                            <h4 className="text-theme-primary font-medium">Push Notifications</h4>
                                             <p className="text-gray-400 text-sm">Receive notifications for important updates</p>
                                         </div>
                                         <button
@@ -214,7 +227,7 @@ const Settings = () => {
 
                                     <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
                                         <div>
-                                            <h4 className="text-white font-medium">Budget Alerts</h4>
+                                            <h4 className="text-theme-primary font-medium">Budget Alerts</h4>
                                             <p className="text-gray-400 text-sm">Get notified when approaching budget limits</p>
                                         </div>
                                         <button
@@ -231,7 +244,7 @@ const Settings = () => {
 
                                     <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
                                         <div>
-                                            <h4 className="text-white font-medium">Auto Backup</h4>
+                                            <h4 className="text-theme-primary font-medium">Auto Backup</h4>
                                             <p className="text-gray-400 text-sm">Automatically backup your data to cloud</p>
                                         </div>
                                         <button
@@ -254,24 +267,13 @@ const Settings = () => {
                     {activeTab === 'data' && (
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-semibold text-white mb-4">Data & Privacy</h3>
+                                <h3 className="text-lg font-semibold text-theme-primary mb-4">Data & Privacy</h3>
 
                                 <div className="space-y-4">
-                                    <div className="p-4 bg-gray-700 rounded-lg">
-                                        <h4 className="text-white font-medium mb-2">Export Data</h4>
-                                        <p className="text-gray-400 text-sm mb-4">
-                                            Download all your data in JSON format for backup or migration purposes.
-                                        </p>
-                                        <button
-                                            onClick={exportData}
-                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                                        >
-                                            Export Settings
-                                        </button>
-                                    </div>
+                                    <DataExport />
 
                                     <div className="p-4 bg-gray-700 rounded-lg">
-                                        <h4 className="text-white font-medium mb-2">Data Storage</h4>
+                                        <h4 className="text-theme-primary font-medium mb-2">Data Storage</h4>
                                         <p className="text-gray-400 text-sm mb-4">
                                             Your data is stored locally in your browser and on our secure servers. We use encryption to protect your information.
                                         </p>

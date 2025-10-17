@@ -1,21 +1,61 @@
 @import "tailwindcss";
 
-/* Custom scrollbar - GitHub dark style */
+/* Root variables for theme colors */
+:root {
+    /* Dark theme colors */
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-hover: #30363d;
+    --text-primary: #f0f6fc;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border-primary: #30363d;
+    --border-secondary: #21262d;
+}
+
+/* Light theme colors */
+.light {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f6f8fa;
+    --bg-tertiary: #ffffff;
+    --bg-hover: #f3f4f6;
+    --text-primary: #1f2328;
+    --text-secondary: #656d76;
+    --text-muted: #8c959f;
+    --border-primary: #d1d9e0;
+    --border-secondary: #e1e4e8;
+}
+
+/* Dark theme colors (explicit) */
+.dark {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-hover: #30363d;
+    --text-primary: #f0f6fc;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border-primary: #30363d;
+    --border-secondary: #21262d;
+}
+
+/* Custom scrollbar - Theme aware */
 ::-webkit-scrollbar {
     width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #0d1117;
+    background: var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #30363d;
+    background: var(--border-primary);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #484f58;
+    background: var(--bg-hover);
 }
 
 /* Smooth transitions */
@@ -54,59 +94,165 @@
     animation: slideIn 0.3s ease-out;
 }
 
-/* GitHub-style glassmorphism effect */
-.glass {
-    background: rgba(13, 17, 23, 0.9);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(48, 54, 61, 0.4);
+/* Theme-aware utility classes */
+.bg-theme-primary {
+    background-color: var(--bg-primary);
 }
 
-/* GitHub-style gradient backgrounds */
-.gradient-bg {
-    background: linear-gradient(135deg, #0d1117 0%, #010409 100%);
+.bg-theme-secondary {
+    background-color: var(--bg-secondary);
 }
 
-.gradient-card {
-    background: linear-gradient(135deg, #21262d 0%, #161b22 100%);
+.bg-theme-tertiary {
+    background-color: var(--bg-tertiary);
 }
 
-/* GitHub-style borders */
-.border-github {
-    border-color: #30363d;
+.bg-theme-hover {
+    background-color: var(--bg-hover);
 }
 
-/* GitHub-style hover effects */
-.hover-github:hover {
-    background-color: #21262d;
-    border-color: #f0f6fc1a;
+.text-theme-primary {
+    color: var(--text-primary);
 }
 
-/* GitHub-style focus rings */
-.focus-github:focus {
+.text-theme-secondary {
+    color: var(--text-secondary);
+}
+
+.text-theme-muted {
+    color: var(--text-muted);
+}
+
+.border-theme-primary {
+    border-color: var(--border-primary);
+}
+
+.border-theme-secondary {
+    border-color: var(--border-secondary);
+}
+
+/* Hover effects */
+.hover-theme:hover {
+    background-color: var(--bg-hover);
+}
+
+/* Focus effects */
+.focus-theme:focus {
     outline: 2px solid #1f6feb;
     outline-offset: -2px;
 }
 
-/* Custom GitHub-style button */
-.btn-github {
-    background: #21262d;
-    border: 1px solid #30363d;
-    color: #f0f6fc;
+/* Custom button styles */
+.btn-theme {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
 }
 
-.btn-github:hover {
-    background: #30363d;
-    border-color: #8b949e;
+.btn-theme:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--text-secondary);
 }
 
-/* GitHub-style input */
-.input-github {
-    background: #0d1117;
-    border: 1px solid #30363d;
-    color: #f0f6fc;
+/* Input styles */
+.input-theme {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
 }
 
-.input-github:focus {
+.input-theme:focus {
     border-color: #1f6feb;
     box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+}
+
+.input-theme::placeholder {
+    color: var(--text-muted);
+}
+
+/* Override hardcoded colors with theme-aware ones */
+.bg-\[#161b22\] {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-\[#0d1117\] {
+    background-color: var(--bg-primary) !important;
+}
+
+.bg-\[#21262d\] {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.bg-\[#30363d\] {
+    background-color: var(--bg-hover) !important;
+}
+
+.text-\[#f0f6fc\] {
+    color: var(--text-primary) !important;
+}
+
+.text-\[#8b949e\] {
+    color: var(--text-secondary) !important;
+}
+
+.text-\[#6e7681\] {
+    color: var(--text-muted) !important;
+}
+
+.border-\[#30363d\] {
+    border-color: var(--border-primary) !important;
+}
+
+.border-\[#21262d\] {
+    border-color: var(--border-secondary) !important;
+}
+
+/* Additional overrides for common hardcoded colors */
+.text-white {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-300 {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-400 {
+    color: var(--text-secondary) !important;
+}
+
+.text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+.bg-gray-700 {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.bg-gray-800 {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-gray-900 {
+    background-color: var(--bg-primary) !important;
+}
+
+.border-gray-600 {
+    border-color: var(--border-primary) !important;
+}
+
+.border-gray-700 {
+    border-color: var(--border-primary) !important;
+}
+
+/* Hover states */
+.hover\:text-white:hover {
+    color: var(--text-primary) !important;
+}
+
+.hover\:bg-gray-700:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+.hover\:bg-gray-800:hover {
+    background-color: var(--bg-hover) !important;
 }

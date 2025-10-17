@@ -30,3 +30,38 @@ model Item {
   billId   Int
   bill     Bill    @relation(fields: [billId], references: [id])
 }
+
+model UserSettings {
+  id              Int      @id @default(autoincrement())
+  currency        String   @default("INR")
+  dateFormat      String   @default("DD/MM/YYYY")
+  theme           String   @default("dark")
+  notifications   Boolean  @default(true)
+  autoBackup      Boolean  @default(false)
+  defaultCategory String   @default("others")
+  budgetAlerts    Boolean  @default(true)
+  monthlyBudget   Float    @default(50000)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Budget {
+  id          Int      @id @default(autoincrement())
+  category    String
+  amount      Float
+  period      String   @default("monthly") // monthly, yearly
+  startDate   DateTime
+  endDate     DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  type      String   // budget_alert, reminder, info
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

@@ -2,19 +2,15 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useSettings } from '../hooks/useSettings.jsx';
 
 export default function BillTable({ bills, setBills }) {
+  const { formatCurrency, formatDate } = useSettings();
   const [expanded, setExpanded] = useState(null);
   const [editing, setEditing] = useState(null);
   const [editData, setEditData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const formatCurrency = (val) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(val || 0);
 
   // Fetch bills
   useEffect(() => {

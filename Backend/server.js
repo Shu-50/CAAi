@@ -331,4 +331,376 @@ app.delete("/items/:id", async (req, res) => {
   }
 });
 
+// 8️⃣ Database utilities (Development only)
+app.post("/dev/reset-sequences", async (req, res) => {
+  try {
+    // Only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: "Not allowed in production" });
+    }
+
+    // Reset Bill sequence
+    const maxBillId = await prisma.bill.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true }
+    });
+
+    const nextBillId = maxBillId ? maxBillId.id + 1 : 1;
+    await prisma.$executeRaw`ALTER SEQUENCE "Bill_id_seq" RESTART WITH ${nextBillId}`;
+
+    // Reset Item sequence
+    const maxItemId = await prisma.item.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true }
+    });
+
+    const nextItemId = maxItemId ? maxItemId.id + 1 : 1;
+    await prisma.$executeRaw`ALTER SEQUENCE "Item_id_seq" RESTART WITH ${nextItemId}`;
+
+    res.json({
+      message: "✅ Sequences reset successfully",
+      nextBillId,
+      nextItemId
+    });
+  } catch (err) {
+    console.error("❌ Reset sequences error:", err);
+    res.status(500).json({ error: "Failed to reset sequences" });
+  }
+});
+
+// 9️⃣ Compact IDs (Renumber all records)
+app.post("/dev/compact-ids", async (req, res) => {
+  try {
+    // Only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: "Not allowed in production" });
+    }
+
+    // Get all bills ordered by current ID
+    const bills = await prisma.bill.findMany({
+      orderBy: { id: 'asc' },
+      include: { items: true }
+    });
+
+    // Delete all bills and items
+    await prisma.item.deleteMany({});
+    await prisma.bill.deleteMany({});
+
+    // Reset sequences to 1
+    await prisma.$executeRaw`ALTER SEQUENCE "Bill_id_seq" RESTART WITH 1`;
+    await prisma.$executeRaw`ALTER SEQUENCE "Item_id_seq" RESTART WITH 1`;
+
+    // Recreate bills with new consecutive IDs
+    const newBills = [];
+    for (const bill of bills) {
+      const { id, items, ...billData } = bill;
+
+      const newBill = await prisma.bill.create({
+        data: {
+          ...billData,
+          items: {
+            create: items.map(({ id, billId, ...itemData }) => itemData)
+          }
+        },
+        include: { items: true }
+      });
+
+      newBills.push(newBill);
+    }
+
+    res.json({
+      message: "✅ IDs compacted successfully",
+      billsProcessed: newBills.length,
+      newBills
+    });
+  } catch (err) {
+    console.error("❌ Compact IDs error:", err);
+    res.status(500).json({ error: "Failed to compact IDs" });
+  }
+});
+
+// 🔟 User Settings Management
+app.get("/settings", async (req, res) => {
+  try {
+    let settings = await prisma.userSettings.findFirst();
+
+    // Create default settings if none exist
+    if (!settings) {
+      settings = await prisma.userSettings.create({
+        data: {}
+      });
+    }
+
+    res.json(settings);
+  } catch (err) {
+    console.error("❌ Get settings error:", err);
+    res.status(500).json({ error: "Failed to fetch settings" });
+  }
+});
+
+app.put("/settings", async (req, res) => {
+  try {
+    const settingsData = req.body;
+
+    let settings = await prisma.userSettings.findFirst();
+
+    if (settings) {
+      settings = await prisma.userSettings.update({
+        where: { id: settings.id },
+        data: settingsData
+      });
+    } else {
+      settings = await prisma.userSettings.create({
+        data: settingsData
+      });
+    }
+
+    res.json(settings);
+  } catch (err) {
+    console.error("❌ Update settings error:", err);
+    res.status(500).json({ error: "Failed to update settings" });
+  }
+});
+
+// 1️⃣1️⃣ Budget Management
+app.get("/budgets", async (req, res) => {
+  try {
+    const budgets = await prisma.budget.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(budgets);
+  } catch (err) {
+    console.error("❌ Get budgets error:", err);
+    res.status(500).json({ error: "Failed to fetch budgets" });
+  }
+});
+
+app.post("/budgets", async (req, res) => {
+  try {
+    const budget = await prisma.budget.create({
+      data: req.body
+    });
+    res.json(budget);
+  } catch (err) {
+    console.error("❌ Create budget error:", err);
+    res.status(500).json({ error: "Failed to create budget" });
+  }
+});
+
+app.put("/budgets/:id", async (req, res) => {
+  try {
+    const budgetId = parseInt(req.params.id);
+    const budget = await prisma.budget.update({
+      where: { id: budgetId },
+      data: req.body
+    });
+    res.json(budget);
+  } catch (err) {
+    console.error("❌ Update budget error:", err);
+    res.status(500).json({ error: "Failed to update budget" });
+  }
+});
+
+app.delete("/budgets/:id", async (req, res) => {
+  try {
+    const budgetId = parseInt(req.params.id);
+    await prisma.budget.update({
+      where: { id: budgetId },
+      data: { isActive: false }
+    });
+    res.json({ message: "Budget deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete budget error:", err);
+    res.status(500).json({ error: "Failed to delete budget" });
+  }
+});
+
+// 1️⃣2️⃣ Notifications Management
+app.get("/notifications", async (req, res) => {
+  try {
+    const notifications = await prisma.notification.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+    res.json(notifications);
+  } catch (err) {
+    console.error("❌ Get notifications error:", err);
+    res.status(500).json({ error: "Failed to fetch notifications" });
+  }
+});
+
+app.post("/notifications", async (req, res) => {
+  try {
+    const notification = await prisma.notification.create({
+      data: req.body
+    });
+    res.json(notification);
+  } catch (err) {
+    console.error("❌ Create notification error:", err);
+    res.status(500).json({ error: "Failed to create notification" });
+  }
+});
+
+app.put("/notifications/:id/read", async (req, res) => {
+  try {
+    const notificationId = parseInt(req.params.id);
+    const notification = await prisma.notification.update({
+      where: { id: notificationId },
+      data: { isRead: true }
+    });
+    res.json(notification);
+  } catch (err) {
+    console.error("❌ Mark notification read error:", err);
+    res.status(500).json({ error: "Failed to mark notification as read" });
+  }
+});
+
+// 1️⃣3️⃣ Enhanced Analytics with Budget Comparison
+app.get("/analytics/budget-comparison", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // Get bills in date range
+    const bills = await prisma.bill.findMany({
+      where: {
+        date: {
+          gte: startDate ? new Date(startDate) : undefined,
+          lte: endDate ? new Date(endDate) : undefined
+        }
+      },
+      include: { items: true }
+    });
+
+    // Get active budgets
+    const budgets = await prisma.budget.findMany({
+      where: { isActive: true }
+    });
+
+    // Calculate spending by category
+    const categorySpending = {};
+    bills.forEach(bill => {
+      bill.items?.forEach(item => {
+        const category = item.category || 'others';
+        categorySpending[category] = (categorySpending[category] || 0) + (item.price || 0);
+      });
+    });
+
+    // Compare with budgets
+    const budgetComparison = budgets.map(budget => {
+      const spent = categorySpending[budget.category] || 0;
+      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+
+      return {
+        ...budget,
+        spent,
+        remaining: Math.max(0, budget.amount - spent),
+        percentage,
+        status: percentage > 100 ? 'over' : percentage > 80 ? 'warning' : 'good'
+      };
+    });
+
+    res.json({
+      categorySpending,
+      budgetComparison,
+      totalSpent: Object.values(categorySpending).reduce((sum, amount) => sum + amount, 0),
+      totalBudget: budgets.reduce((sum, budget) => sum + budget.amount, 0)
+    });
+  } catch (err) {
+    console.error("❌ Budget comparison error:", err);
+    res.status(500).json({ error: "Failed to get budget comparison" });
+  }
+});
+
+// 1️⃣4️⃣ Data Export
+app.get("/export/bills", async (req, res) => {
+  try {
+    const { format = 'json', startDate, endDate } = req.query;
+
+    const bills = await prisma.bill.findMany({
+      where: {
+        date: {
+          gte: startDate ? new Date(startDate) : undefined,
+          lte: endDate ? new Date(endDate) : undefined
+        }
+      },
+      include: { items: true },
+      orderBy: { date: 'desc' }
+    });
+
+    if (format === 'csv') {
+      // Convert to CSV format
+      let csv = 'Bill ID,Vendor,Date,Total,Item Name,Quantity,Price,Category,GST,CGST,SGST\n';
+
+      bills.forEach(bill => {
+        if (bill.items && bill.items.length > 0) {
+          bill.items.forEach(item => {
+            csv += `${bill.id},"${bill.vendor || ''}","${bill.date || ''}",${bill.total || 0},"${item.name || ''}",${item.qty || 0},${item.price || 0},"${item.category || ''}",${item.gst || 0},${item.cgst || 0},${item.sgst || 0}\n`;
+          });
+        } else {
+          csv += `${bill.id},"${bill.vendor || ''}","${bill.date || ''}",${bill.total || 0},"","","","","","",""\n`;
+        }
+      });
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="bills-export.csv"');
+      res.send(csv);
+    } else {
+      res.json({
+        exportDate: new Date().toISOString(),
+        totalBills: bills.length,
+        dateRange: { startDate, endDate },
+        bills
+      });
+    }
+  } catch (err) {
+    console.error("❌ Export error:", err);
+    res.status(500).json({ error: "Failed to export data" });
+  }
+});
+
+// 1️⃣5️⃣ Bulk Operations
+app.post("/bills/bulk-delete", async (req, res) => {
+  try {
+    const { billIds } = req.body;
+
+    // Delete items first
+    await prisma.item.deleteMany({
+      where: { billId: { in: billIds } }
+    });
+
+    // Delete bills
+    const result = await prisma.bill.deleteMany({
+      where: { id: { in: billIds } }
+    });
+
+    res.json({
+      message: `${result.count} bills deleted successfully`,
+      deletedCount: result.count
+    });
+  } catch (err) {
+    console.error("❌ Bulk delete error:", err);
+    res.status(500).json({ error: "Failed to delete bills" });
+  }
+});
+
+app.put("/bills/bulk-update", async (req, res) => {
+  try {
+    const { billIds, updateData } = req.body;
+
+    const result = await prisma.bill.updateMany({
+      where: { id: { in: billIds } },
+      data: updateData
+    });
+
+    res.json({
+      message: `${result.count} bills updated successfully`,
+      updatedCount: result.count
+    });
+  } catch (err) {
+    console.error("❌ Bulk update error:", err);
+    res.status(500).json({ error: "Failed to update bills" });
+  }
+});
+
 app.listen(5000, () => console.log("🚀 Server running on http://localhost:5000"));

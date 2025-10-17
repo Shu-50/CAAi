@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSettings } from '../hooks/useSettings.jsx';
+import BulkOperations from './BulkOperations';
 
 const ModernBillTable = ({ bills, setBills }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -10,7 +12,12 @@ const ModernBillTable = ({ bills, setBills }) => {
     const [editingBill, setEditingBill] = useState(null);
     const [editData, setEditData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [selectedBills, setSelectedBills] = useState([]);
+    const [showBulkOps, setShowBulkOps] = useState(false);
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [amountRange, setAmountRange] = useState({ min: '', max: '' });
 
+    const { formatCurrency, formatDate } = useSettings();
     const categories = ['all', 'clothes', 'utensils', 'tools', 'electronics', 'makeup', 'food', 'personal care', 'others'];
 
     useEffect(() => {
@@ -29,21 +36,9 @@ const ModernBillTable = ({ bills, setBills }) => {
         }
     };
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR'
-        }).format(amount || 0);
-    };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'No date';
-        return new Date(dateString).toLocaleDateString('en-IN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
+
+
 
     const filteredAndSortedBills = bills
         .filter(bill => {
@@ -53,7 +48,13 @@ const ModernBillTable = ({ bills, setBills }) => {
             const matchesCategory = filterCategory === 'all' ||
                 bill.items?.some(item => item.category === filterCategory);
 
-            return matchesSearch && matchesCategory;
+            const matchesDateRange = (!dateRange.start || new Date(bill.date) >= new Date(dateRange.start)) &&
+                (!dateRange.end || new Date(bill.date) <= new Date(dateRange.end));
+
+            const matchesAmountRange = (!amountRange.min || bill.total >= parseFloat(amountRange.min)) &&
+                (!amountRange.max || bill.total <= parseFloat(amountRange.max));
+
+            return matchesSearch && matchesCategory && matchesDateRange && matchesAmountRange;
         })
         .sort((a, b) => {
             let aValue, bValue;
@@ -149,8 +150,8 @@ const ModernBillTable = ({ bills, setBills }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">All Bills</h1>
-                    <p className="text-gray-400 mt-1">Manage and view all your saved bills</p>
+                    <h1 className="text-3xl font-bold text-theme-primary">All Bills</h1>
+                    <p className="text-theme-secondary mt-1">Manage and view all your saved bills</p>
                 </div>
                 <div className="text-right">
                     <p className="text-2xl font-bold text-white">{bills.length}</p>

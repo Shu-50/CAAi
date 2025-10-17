@@ -7,27 +7,30 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         { id: 'dashboard', label: 'Dashboard', icon: '📊' },
         { id: 'upload', label: 'Upload Bills', icon: '📄' },
         { id: 'bills', label: 'All Bills', icon: '📋' },
+        { id: 'budget', label: 'Budget Manager', icon: '💰' },
         { id: 'analytics', label: 'Analytics', icon: '📈' },
         { id: 'chatbot', label: 'CA Assistant', icon: '🤖' },
         { id: 'settings', label: 'Settings', icon: '⚙️' },
+        { id: 'help', label: 'Help', icon: '❓' },
+        { id: 'database', label: 'Database', icon: '🗄️' }, // Development tool
     ];
 
     return (
-        <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-[#010409] border-r border-[#30363d] flex flex-col transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-theme-primary border-r border-theme-primary flex flex-col transition-all duration-300`}>
             {/* Header */}
-            <div className="p-4 border-b border-[#30363d]">
+            <div className="p-4 border-b border-theme-primary">
                 <div className="flex items-center justify-between">
                     {!isCollapsed && (
                         <div className="flex items-center space-x-2">
                             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                                 <span className="text-white font-bold text-sm">B</span>
                             </div>
-                            <span className="text-white font-semibold text-lg">BillTracker</span>
+                            <span className="text-theme-primary font-semibold text-lg">BillTracker</span>
                         </div>
                     )}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="text-[#8b949e] hover:text-[#f0f6fc] p-1 rounded-lg hover:bg-[#21262d]"
+                        className="text-theme-secondary hover:text-theme-primary p-1 rounded-lg hover:bg-theme-hover"
                     >
                         {isCollapsed ? '→' : '←'}
                     </button>
@@ -42,8 +45,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                             <button
                                 onClick={() => setActiveTab(item.id)}
                                 className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-colors ${activeTab === item.id
-                                    ? 'bg-[#1f6feb] text-[#f0f6fc]'
-                                    : 'text-[#8b949e] hover:text-[#f0f6fc] hover:bg-[#21262d]'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-hover'
                                     }`}
                             >
                                 <span className="text-lg">{item.icon}</span>
@@ -55,15 +58,15 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             </nav>
 
             {/* User Profile */}
-            <div className="p-4 border-t border-[#30363d]">
+            <div className="p-4 border-t border-theme-primary">
                 <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
                         <span className="text-white font-bold text-sm">U</span>
                     </div>
                     {!isCollapsed && (
                         <div>
-                            <p className="text-[#f0f6fc] font-medium text-sm">User</p>
-                            <p className="text-[#8b949e] text-xs">Free Plan</p>
+                            <p className="text-theme-primary font-medium text-sm">User</p>
+                            <p className="text-theme-secondary text-xs">Free Plan</p>
                         </div>
                     )}
                 </div>

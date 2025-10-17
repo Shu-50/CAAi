@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useSettings } from '../hooks/useSettings.jsx';
 
 const Chatbot = () => {
+    const { formatCurrency } = useSettings();
     const [messages, setMessages] = useState([
         {
             id: 1,
@@ -36,12 +38,7 @@ const Chatbot = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR'
-        }).format(amount || 0);
-    };
+
 
     const analyzeSpending = () => {
         const totalSpent = bills.reduce((sum, bill) => sum + (bill.total || 0), 0);
@@ -236,8 +233,8 @@ const Chatbot = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#f0f6fc]">CA Assistant</h1>
-                    <p className="text-[#8b949e] mt-1">Your personal financial advisor powered by AI</p>
+                    <h1 className="text-3xl font-bold text-theme-primary">CA Assistant</h1>
+                    <p className="text-theme-secondary mt-1">Your personal financial advisor powered by AI</p>
                 </div>
                 <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>

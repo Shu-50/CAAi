@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSettings } from '../hooks/useSettings.jsx';
 
 const Analytics = () => {
+    const { formatCurrency, formatDate } = useSettings();
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState('all');
@@ -21,12 +23,7 @@ const Analytics = () => {
         }
     };
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR'
-        }).format(amount || 0);
-    };
+
 
     const filterBillsByTimeRange = (bills) => {
         if (timeRange === 'all') return bills;
@@ -115,8 +112,8 @@ const Analytics = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#f0f6fc]">Analytics</h1>
-                    <p className="text-[#8b949e] mt-1">Detailed insights into your spending patterns</p>
+                    <h1 className="text-3xl font-bold text-theme-primary">Analytics</h1>
+                    <p className="text-theme-secondary mt-1">Detailed insights into your spending patterns</p>
                 </div>
                 <div>
                     <select

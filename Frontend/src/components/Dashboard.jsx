@@ -1,7 +1,22 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSettings } from '../hooks/useSettings.jsx';
+
+const QuickActionButton = ({ icon, title, description, color, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`flex items-center space-x-3 p-4 bg-${color}-600 hover:bg-${color}-700 rounded-lg text-white transition-colors`}
+    >
+        <span className="text-2xl">{icon}</span>
+        <div className="text-left">
+            <p className="font-medium">{title}</p>
+            <p className="text-sm opacity-90">{description}</p>
+        </div>
+    </button>
+);
 
 const Dashboard = () => {
+    const { formatCurrency, formatDate } = useSettings();
     const [stats, setStats] = useState({
         totalBills: 0,
         totalAmount: 0,
@@ -13,6 +28,17 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchDashboardData();
+    }, []);
+
+    // Listen for navigation events from quick actions
+    useEffect(() => {
+        const handleNavigate = (event) => {
+            // This will be handled by the parent App component
+            window.parent?.postMessage({ type: 'navigate', tab: event.detail }, '*');
+        };
+
+        window.addEventListener('navigate', handleNavigate);
+        return () => window.removeEventListener('navigate', handleNavigate);
     }, []);
 
     const fetchDashboardData = async () => {
@@ -53,12 +79,7 @@ const Dashboard = () => {
         }
     };
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR'
-        }).format(amount);
-    };
+
 
     const StatCard = ({ title, value, icon, color = 'blue' }) => (
         <div className={`bg-gradient-to-r from-${color}-500 to-${color}-600 p-6 rounded-xl text-white animate-fadeIn`}>
@@ -85,12 +106,12 @@ const Dashboard = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#f0f6fc]">Dashboard</h1>
-                    <p className="text-[#8b949e] mt-1">Welcome back! Here's your financial overview.</p>
+                    <h1 className="text-3xl font-bold text-theme-primary">Dashboard</h1>
+                    <p className="text-theme-secondary mt-1">Welcome back! Here's your financial overview.</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-sm text-[#8b949e]">Last updated</p>
-                    <p className="text-[#f0f6fc] font-medium">{new Date().toLocaleDateString()}</p>
+                    <p className="text-sm text-theme-secondary">Last updated</p>
+                    <p className="text-theme-primary font-medium">{new Date().toLocaleDateString()}</p>
                 </div>
             </div>
 
@@ -125,8 +146,8 @@ const Dashboard = () => {
             {/* Charts and Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Category Breakdown */}
-                <div className="bg-[#161b22] p-6 rounded-xl border border-[#30363d]">
-                    <h3 className="text-xl font-semibold text-[#f0f6fc] mb-4">Category Breakdown</h3>
+                <div className="bg-theme-secondary p-6 rounded-xl border border-theme-primary">
+                    <h3 className="text-xl font-semibold text-theme-primary mb-4">Category Breakdown</h3>
                     <div className="space-y-3">
                         {Object.entries(stats.categories)
                             .sort(([, a], [, b]) => b - a)
@@ -150,8 +171,8 @@ const Dashboard = () => {
                 </div>
 
                 {/* Recent Bills */}
-                <div className="bg-[#161b22] p-6 rounded-xl border border-[#30363d]">
-                    <h3 className="text-xl font-semibold text-[#f0f6fc] mb-4">Recent Bills</h3>
+                <div className="bg-theme-secondary p-6 rounded-xl border border-theme-primary">
+                    <h3 className="text-xl font-semibold text-theme-primary mb-4">Recent Bills</h3>
                     <div className="space-y-3">
                         {recentBills.length > 0 ? (
                             recentBills.map((bill) => (
@@ -176,30 +197,30 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-[#161b22] p-6 rounded-xl border border-[#30363d]">
-                <h3 className="text-xl font-semibold text-[#f0f6fc] mb-4">Quick Actions</h3>
+            <div className="bg-theme-secondary p-6 rounded-xl border border-theme-primary">
+                <h3 className="text-xl font-semibold text-theme-primary mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button className="flex items-center space-x-3 p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors">
-                        <span className="text-2xl">📄</span>
-                        <div className="text-left">
-                            <p className="font-medium">Upload New Bill</p>
-                            <p className="text-sm opacity-90">Scan and extract data</p>
-                        </div>
-                    </button>
-                    <button className="flex items-center space-x-3 p-4 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors">
-                        <span className="text-2xl">📊</span>
-                        <div className="text-left">
-                            <p className="font-medium">View Analytics</p>
-                            <p className="text-sm opacity-90">Detailed insights</p>
-                        </div>
-                    </button>
-                    <button className="flex items-center space-x-3 p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors">
-                        <span className="text-2xl">🤖</span>
-                        <div className="text-left">
-                            <p className="font-medium">Ask CA Assistant</p>
-                            <p className="text-sm opacity-90">Get financial advice</p>
-                        </div>
-                    </button>
+                    <QuickActionButton
+                        icon="📄"
+                        title="Upload New Bill"
+                        description="Scan and extract data"
+                        color="blue"
+                        onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'upload' }))}
+                    />
+                    <QuickActionButton
+                        icon="📊"
+                        title="View Analytics"
+                        description="Detailed insights"
+                        color="green"
+                        onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'analytics' }))}
+                    />
+                    <QuickActionButton
+                        icon="🤖"
+                        title="Ask CA Assistant"
+                        description="Get financial advice"
+                        color="purple"
+                        onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'chatbot' }))}
+                    />
                 </div>
             </div>
         </div>

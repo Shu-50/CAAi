@@ -114,12 +114,12 @@ const ModernUpload = ({ setBills }) => {
         <div className="space-y-6 animate-fadeIn">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-[#f0f6fc]">Upload Bills</h1>
-                <p className="text-[#8b949e] mt-1">Upload your receipts and let AI extract the data automatically.</p>
+                <h1 className="text-3xl font-bold text-theme-primary">Upload Bills</h1>
+                <p className="text-theme-secondary mt-1">Upload your receipts and let AI extract the data automatically.</p>
             </div>
 
             {/* Upload Area */}
-            <div className="bg-[#161b22] p-6 rounded-xl border border-[#30363d]">
+            <div className="bg-theme-secondary p-6 rounded-xl border border-theme-primary">
                 <div
                     className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragActive
                         ? 'border-blue-500 bg-blue-500/10'
@@ -144,7 +144,7 @@ const ModernUpload = ({ setBills }) => {
                                 <span className="text-2xl">✓</span>
                             </div>
                             <div>
-                                <p className="text-white font-medium">{file.name}</p>
+                                <p className="text-theme-primary font-medium">{file.name}</p>
                                 <p className="text-gray-400 text-sm">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                             </div>
                             <div className="flex justify-center space-x-3">
@@ -176,7 +176,7 @@ const ModernUpload = ({ setBills }) => {
                                 <span className="text-2xl">📄</span>
                             </div>
                             <div>
-                                <p className="text-white font-medium">Drop your bill here</p>
+                                <p className="text-theme-primary font-medium">Drop your bill here</p>
                                 <p className="text-gray-400 text-sm">or click to browse files</p>
                             </div>
                             <button
@@ -200,7 +200,7 @@ const ModernUpload = ({ setBills }) => {
             {bill && (
                 <div className="bg-[#161b22] p-6 rounded-xl border border-[#30363d] animate-fadeIn">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold text-white">Review & Edit</h2>
+                        <h2 className="text-xl font-semibold text-theme-primary">Review & Edit</h2>
                         <div className="flex space-x-3">
                             <button
                                 onClick={() => setBill(null)}
@@ -220,7 +220,7 @@ const ModernUpload = ({ setBills }) => {
                     {/* Bill Information */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Vendor</label>
+                            <label className="block text-sm font-medium text-theme-secondary mb-2">Vendor</label>
                             <input
                                 type="text"
                                 value={bill.vendor || ''}
@@ -230,7 +230,7 @@ const ModernUpload = ({ setBills }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Date</label>
+                            <label className="block text-sm font-medium text-theme-secondary mb-2">Date</label>
                             <input
                                 type="date"
                                 value={(() => {
@@ -249,7 +249,7 @@ const ModernUpload = ({ setBills }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Total Amount</label>
+                            <label className="block text-sm font-medium text-theme-secondary mb-2">Total Amount</label>
                             <input
                                 type="number"
                                 step="0.01"
@@ -264,7 +264,7 @@ const ModernUpload = ({ setBills }) => {
                     {/* Items Table */}
                     <div className="overflow-x-auto">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-medium text-white">Items</h3>
+                            <h3 className="text-lg font-medium text-theme-primary">Items</h3>
                             <button
                                 onClick={addNewItem}
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"

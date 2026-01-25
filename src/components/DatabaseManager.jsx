@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 const DatabaseManager = () => {
     const [loading, setLoading] = useState(false);
@@ -12,7 +14,7 @@ const DatabaseManager = () => {
 
         try {
             setLoading(true);
-            const response = await axios.post('http://localhost:5000/dev/reset-sequences');
+            const response = await axios.post(API_ENDPOINTS.DEV_reset-sequences');
             setResult({
                 type: 'success',
                 message: response.data.message,
@@ -36,7 +38,7 @@ const DatabaseManager = () => {
 
         try {
             setLoading(true);
-            const response = await axios.post('http://localhost:5000/dev/compact-ids');
+            const response = await axios.post(API_ENDPOINTS.DEV_compact-ids');
             setResult({
                 type: 'success',
                 message: response.data.message,

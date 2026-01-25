@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);

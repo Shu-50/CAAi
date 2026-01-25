@@ -1,4 +1,5 @@
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.jsx';
+import { API_ENDPOINTS } from '../config/api';
 
 const Help = () => {
     const { shortcuts } = useKeyboardShortcuts(() => { });

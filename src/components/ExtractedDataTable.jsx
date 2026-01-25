@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_ENDPOINTS } from '../config/api';
 
 export default function ExtractedDataTable({ data, onSave }) {
   const [editedData, setEditedData] = useState(data);
@@ -78,3 +79,4 @@ export default function ExtractedDataTable({ data, onSave }) {
     </div>
   );
 }
+

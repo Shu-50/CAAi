@@ -1,5 +1,7 @@
 // import { useState } from "react";
+import { API_ENDPOINTS } from '../config/api';
 // import axios from "axios";
+import { API_ENDPOINTS } from '../config/api';
 
 // export default function UploadBill({ setBills }) {
 //   const [file, setFile] = useState(null);
@@ -21,7 +23,7 @@
 //       setError(null);
 //       setBill(null);
 
-//       const res = await axios.post("http://localhost:5000/extract", formData, {
+//       const res = await axios.post(API_ENDPOINTS.EXTRACT, formData, {
 //         headers: { "Content-Type": "multipart/form-data" },
 //       });
 
@@ -36,7 +38,7 @@
 
 //   const handleSave = async () => {
 //     try {
-//       await axios.post("http://localhost:5000/bills", bill);
+//       await axios.post(API_ENDPOINTS.BILLS, bill);
 //       alert("✅ Bill saved successfully!");
 //       setBills((prev) => [...prev, bill]);
 //       setBill(null);
@@ -248,7 +250,9 @@
 //   );
 // }
 import { useState } from "react";
+import { API_ENDPOINTS } from '../config/api';
 import axios from "axios";
+import { API_ENDPOINTS } from '../config/api';
 
 export default function UploadBill({ setBills }) {
   const [file, setFile] = useState(null);
@@ -270,7 +274,7 @@ export default function UploadBill({ setBills }) {
       setError(null);
       setBill(null);
 
-      const res = await axios.post("http://localhost:5000/extract", formData, {
+      const res = await axios.post(API_ENDPOINTS.EXTRACT, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -285,7 +289,7 @@ export default function UploadBill({ setBills }) {
 
   const handleSave = async () => {
     try {
-      await axios.post("http://localhost:5000/bills", bill);
+      await axios.post(API_ENDPOINTS.BILLS, bill);
       alert("✅ Bill saved successfully!");
       setBills((prev) => [...prev, bill]);
       setBill(null);
@@ -312,7 +316,7 @@ export default function UploadBill({ setBills }) {
 
     try {
       if (item.id) {
-        await axios.delete(`http://localhost:5000/items/${item.id}`);
+        await axios.delete(API_ENDPOINTS.ITEM_DELETE(item.id));
         alert("🗑️ Item deleted successfully from DB!");
       } else {
         alert("🗑️ Item removed from preview!");
@@ -527,3 +531,4 @@ export default function UploadBill({ setBills }) {
     </div>
   );
 }
+

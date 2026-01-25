@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 const BulkOperations = ({ selectedBills, onComplete }) => {
     const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ const BulkOperations = ({ selectedBills, onComplete }) => {
 
         try {
             setLoading(true);
-            await axios.post('http://localhost:5000/bills/bulk-delete', {
+            await axios.post(API_ENDPOINTS.BULK_DELETE, {
                 billIds: selectedBills
             });
 
@@ -46,7 +48,7 @@ const BulkOperations = ({ selectedBills, onComplete }) => {
 
         try {
             setLoading(true);
-            await axios.put('http://localhost:5000/bills/bulk-update', {
+            await axios.put(API_ENDPOINTS.BULK_UPDATE, {
                 billIds: selectedBills,
                 updateData: dataToUpdate
             });

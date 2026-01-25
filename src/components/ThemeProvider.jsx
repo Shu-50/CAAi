@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 import { useSettings } from '../hooks/useSettings.jsx';
+import { API_ENDPOINTS } from '../config/api';
 
 const ThemeContext = createContext();
 

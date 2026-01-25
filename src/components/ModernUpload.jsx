@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
+import { API_ENDPOINTS } from '../config/api';
 import axios from "axios";
+import { API_ENDPOINTS } from '../config/api';
 
 const ModernUpload = ({ setBills }) => {
   const [file, setFile] = useState(null);
@@ -49,7 +51,7 @@ const ModernUpload = ({ setBills }) => {
       setError(null);
       setBill(null);
 
-      const res = await axios.post("http://localhost:5000/extract", formData, {
+      const res = await axios.post(API_ENDPOINTS.EXTRACT, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -64,7 +66,7 @@ const ModernUpload = ({ setBills }) => {
 
   const handleSave = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/bills", bill);
+      const res = await axios.post(API_ENDPOINTS.BILLS, bill);
       setBills((prev) => [...prev, res.data]);
       setBill(null);
       setFile(null);
@@ -451,3 +453,4 @@ const ModernUpload = ({ setBills }) => {
 };
 
 export default ModernUpload;
+

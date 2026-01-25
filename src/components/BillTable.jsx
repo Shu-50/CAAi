@@ -1,8 +1,11 @@
 
 
 import { useEffect, useState } from "react";
+import { API_ENDPOINTS } from '../config/api';
 import axios from "axios";
+import { API_ENDPOINTS } from '../config/api';
 import { useSettings } from '../hooks/useSettings.jsx';
+import { API_ENDPOINTS } from '../config/api';
 
 export default function BillTable({ bills, setBills }) {
   const { formatCurrency, formatDate } = useSettings();
@@ -17,7 +20,7 @@ export default function BillTable({ bills, setBills }) {
     const fetchBills = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5000/bills");
+        const res = await axios.get(API_ENDPOINTS.BILLS);
         setBills(res.data);
       } catch (err) {
         setError("Failed to fetch bills.");
@@ -45,7 +48,7 @@ export default function BillTable({ bills, setBills }) {
   const handleSave = async () => {
     try {
       const res = await axios.put(
-        `http://localhost:5000/bills/${editData.id}`,
+        API_ENDPOINTS.BILL_UPDATE(editData.id),
         editData
       );
       setBills((prev) =>
@@ -63,7 +66,7 @@ export default function BillTable({ bills, setBills }) {
     const confirm = window.confirm("⚠️ Are you sure you want to delete this bill?");
     if (!confirm) return;
     try {
-      await axios.delete(`http://localhost:5000/bills/${billId}`);
+      await axios.delete(API_ENDPOINTS.BILL_UPDATE(billId));
       setBills((prev) => prev.filter((b) => b.id !== billId));
     } catch (err) {
       console.error("Delete error:", err);
@@ -348,3 +351,4 @@ export default function BillTable({ bills, setBills }) {
     </div>
   );
 }
+

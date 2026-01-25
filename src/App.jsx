@@ -15,6 +15,7 @@ import { SettingsProvider } from "./hooks/useSettings.jsx";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts.jsx";
 import { ThemeProvider } from "./components/ThemeProvider.jsx";
 import ThemeTest from "./components/ThemeTest.jsx";
+import { API_ENDPOINTS } from "./config/api";
 
 function App() {
   const [bills, setBills] = useState([]);
@@ -28,7 +29,7 @@ function App() {
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const res = await fetch("http://localhost:5000/bills");
+        const res = await fetch(API_ENDPOINTS.BILLS);
         if (!res.ok) throw new Error("Failed to fetch bills");
         const data = await res.json();
         setBills(data);
@@ -38,9 +39,7 @@ function App() {
     };
     const fetchUnreadCount = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/notifications/unread-count",
-        );
+        const res = await axios.get(API_ENDPOINTS.NOTIFICATION_UNREAD_COUNT);
         setUnreadCount(res.data.count);
       } catch (err) {
         console.error("Error fetching unread count:", err);

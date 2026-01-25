@@ -30,7 +30,7 @@ const Chatbot = () => {
 
   const fetchBills = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/bills");
+      const response = await axios.get("API_ENDPOINTS.BILLS");
       setBills(response.data);
     } catch (error) {
       console.error("Error fetching bills:", error);
@@ -204,7 +204,7 @@ const Chatbot = () => {
 
     try {
       // Try to get AI response from backend
-      const response = await axios.post("http://localhost:5000/chat", {
+      const response = await axios.post("API_ENDPOINTS.CHAT", {
         message: currentMessage,
         bills: bills,
       });
@@ -492,3 +492,4 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
+

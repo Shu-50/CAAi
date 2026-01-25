@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { API_ENDPOINTS } from '../config/api';
 import axios from "axios";
+import { API_ENDPOINTS } from '../config/api';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -23,7 +25,7 @@ const Notifications = () => {
   const markAsRead = async (notificationId) => {
     try {
       await axios.put(
-        `http://localhost:5000/notifications/${notificationId}/read`,
+        API_ENDPOINTS.NOTIFICATION_READ(notificationId),
       );
       setNotifications(
         notifications.map((n) =>
@@ -187,3 +189,4 @@ const Notifications = () => {
 };
 
 export default Notifications;
+

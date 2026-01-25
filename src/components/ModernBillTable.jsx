@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 import { useSettings } from '../hooks/useSettings.jsx';
+import { API_ENDPOINTS } from '../config/api';
 import BulkOperations from './BulkOperations';
+import { API_ENDPOINTS } from '../config/api';
 
 const ModernBillTable = ({ bills, setBills }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,7 +31,7 @@ const ModernBillTable = ({ bills, setBills }) => {
     const fetchBills = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('http://localhost:5000/bills');
+            const response = await axios.get(API_ENDPOINTS.BILLS);
             setBills(response.data);
         } catch (error) {
             console.error('Error fetching bills:', error);
@@ -89,7 +93,7 @@ const ModernBillTable = ({ bills, setBills }) => {
 
     const handleSave = async () => {
         try {
-            const response = await axios.put(`http://localhost:5000/bills/${editData.id}`, editData);
+            const response = await axios.put(API_ENDPOINTS.BILL_UPDATE(editData.id), editData);
             setBills(bills.map(b => b.id === editData.id ? response.data : b));
             setEditingBill(null);
             setEditData(null);
@@ -106,7 +110,7 @@ const ModernBillTable = ({ bills, setBills }) => {
         if (!window.confirm('Are you sure you want to delete this bill?')) return;
 
         try {
-            await axios.delete(`http://localhost:5000/bills/${billId}`);
+            await axios.delete(API_ENDPOINTS.BILL_UPDATE(billId));
             setBills(bills.filter(b => b.id !== billId));
             showNotification('Bill deleted successfully!', 'success');
         } catch (error) {

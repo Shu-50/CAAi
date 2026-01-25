@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import { API_ENDPOINTS } from '../config/api';
 import axios from "axios";
+import { API_ENDPOINTS } from '../config/api';
 import { useSettings } from "../hooks/useSettings.jsx";
+import { API_ENDPOINTS } from '../config/api';
 
 const BudgetManager = () => {
   const { formatCurrency, getCurrencySymbol } = useSettings();
@@ -33,7 +36,7 @@ const BudgetManager = () => {
 
   const fetchBudgets = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/budgets");
+      const response = await axios.get(API_ENDPOINTS.BUDGETS);
       setBudgets(response.data);
     } catch (error) {
       console.error("Error fetching budgets:", error);
@@ -64,7 +67,7 @@ const BudgetManager = () => {
         return;
       }
 
-      await axios.post("http://localhost:5000/budgets", {
+      await axios.post(API_ENDPOINTS.BUDGETS, {
         ...newBudget,
         startDate: new Date(newBudget.startDate),
         endDate:
@@ -110,7 +113,7 @@ const BudgetManager = () => {
     if (!window.confirm("Are you sure you want to delete this budget?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/budgets/${budgetId}`);
+      await axios.delete(API_ENDPOINTS.BUDGET_DELETE(budgetId));
       fetchBudgets();
       fetchBudgetComparison();
       showNotification("Budget deleted successfully!", "success");
@@ -435,3 +438,4 @@ const BudgetManager = () => {
 };
 
 export default BudgetManager;
+

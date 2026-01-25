@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 import { useSettings } from '../hooks/useSettings.jsx';
+import { API_ENDPOINTS } from '../config/api';
 
 const Analytics = () => {
     const { formatCurrency, formatDate } = useSettings();
@@ -14,7 +17,7 @@ const Analytics = () => {
 
     const fetchBills = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/bills');
+            const response = await axios.get(API_ENDPOINTS.BILLS);
             setBills(response.data);
         } catch (error) {
             console.error('Error fetching bills:', error);

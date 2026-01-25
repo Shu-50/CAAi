@@ -1,4 +1,5 @@
 import { useSettings } from '../hooks/useSettings.jsx';
+import { API_ENDPOINTS } from '../config/api';
 
 const ThemeTest = () => {
     const { settings, updateSettings } = useSettings();

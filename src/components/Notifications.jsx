@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS } from "../config/api";
 import axios from "axios";
-import { API_ENDPOINTS } from "../config/api";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);

@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { API_ENDPOINTS } from '../config/api';
 import axios from "axios";
-import { API_ENDPOINTS } from '../config/api';
 
 const ModernUpload = ({ setBills }) => {
   const [file, setFile] = useState(null);

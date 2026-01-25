@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../config/api';
 import { useSettings } from '../hooks/useSettings.jsx';
-import { API_ENDPOINTS } from '../config/api';
 import BulkOperations from './BulkOperations';
-import { API_ENDPOINTS } from '../config/api';
 
 const ModernBillTable = ({ bills, setBills }) => {
     const [searchTerm, setSearchTerm] = useState('');

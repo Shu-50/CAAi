@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../config/api';
 
 const DatabaseManager = () => {
     const [loading, setLoading] = useState(false);

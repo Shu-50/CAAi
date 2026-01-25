@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { API_ENDPOINTS } from '../config/api';
 import { useSettings } from '../hooks/useSettings.jsx';
-import { API_ENDPOINTS } from '../config/api';
 import DataExport from './DataExport';
-import { API_ENDPOINTS } from '../config/api';
 
 const Settings = () => {
     const { settings, updateSettings, loading } = useSettings();

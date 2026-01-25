@@ -74,7 +74,7 @@ const ModernUpload = ({ setBills }) => {
 
       // Check for budget alerts after saving bill
       try {
-        await axios.post("http://localhost:5000/budgets/check-alerts");
+        await axios.post(API_ENDPOINTS.BUDGET_CHECK_ALERTS);
       } catch (err) {
         console.log("Budget check skipped:", err.message);
       }
@@ -453,4 +453,5 @@ const ModernUpload = ({ setBills }) => {
 };
 
 export default ModernUpload;
+
 

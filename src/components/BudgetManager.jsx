@@ -46,7 +46,7 @@ const BudgetManager = () => {
   const fetchBudgetComparison = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/analytics/budget-comparison",
+        API_ENDPOINTS.ANALYTICS_BUDGET_COMPARISON,
       );
       setBudgetComparison(response.data);
     } catch (error) {
@@ -97,7 +97,7 @@ const BudgetManager = () => {
 
       // Check for budget alerts immediately after creating
       try {
-        await axios.post("http://localhost:5000/budgets/check-alerts");
+        await axios.post(API_ENDPOINTS.BUDGET_CHECK_ALERTS);
       } catch (err) {
         console.log("Budget check skipped:", err.message);
       }
@@ -438,4 +438,5 @@ const BudgetManager = () => {
 };
 
 export default BudgetManager;
+
 

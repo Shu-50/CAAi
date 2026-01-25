@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS } from "../config/api";
 import axios from "axios";
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS } from "../config/api";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -13,7 +13,7 @@ const Notifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/notifications");
+      const response = await axios.get(API_ENDPOINTS.NOTIFICATIONS);
       setNotifications(response.data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -24,9 +24,7 @@ const Notifications = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await axios.put(
-        API_ENDPOINTS.NOTIFICATION_READ(notificationId),
-      );
+      await axios.put(API_ENDPOINTS.NOTIFICATION_READ(notificationId));
       setNotifications(
         notifications.map((n) =>
           n.id === notificationId ? { ...n, isRead: true } : n,
@@ -189,4 +187,3 @@ const Notifications = () => {
 };
 
 export default Notifications;
-

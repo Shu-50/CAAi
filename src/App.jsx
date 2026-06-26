@@ -21,6 +21,7 @@ function App() {
   const [bills, setBills] = useState([]);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Enable keyboard shortcuts
   const { shortcuts } = useKeyboardShortcuts(setActiveTab);
@@ -100,16 +101,28 @@ function App() {
   return (
     <SettingsProvider>
       <ThemeProvider>
-        <div className="min-h-screen bg-theme-primary text-theme-primary flex">
+        <div className="min-h-screen bg-theme-primary text-theme-primary flex relative overflow-x-hidden">
           {/* Sidebar */}
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            mobileOpen={mobileOpen}
+            setMobileOpen={setMobileOpen}
+          />
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             {/* Top Bar */}
             <header className="bg-theme-secondary border-b border-theme-primary px-6 py-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setMobileOpen(true)}
+                    className="md:hidden p-2 -ml-2 text-theme-secondary hover:text-theme-primary focus:outline-none"
+                    aria-label="Toggle menu"
+                  >
+                    <span className="text-xl">☰</span>
+                  </button>
                   <h2 className="text-xl font-semibold text-theme-primary capitalize">
                     {activeTab === "chatbot"
                       ? "CA Assistant"
@@ -160,7 +173,7 @@ function App() {
             </header>
 
             {/* Content Area */}
-            <main className="flex-1 overflow-y-auto p-6">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 min-w-0">
               <div className="max-w-7xl mx-auto">{renderContent()}</div>
             </main>
 

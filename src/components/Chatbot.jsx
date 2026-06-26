@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 import { useSettings } from "../hooks/useSettings.jsx";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -11,29 +12,32 @@ const Chatbot = () => {
       id: 1,
       type: "bot",
       content:
-        "Hello! I'm your personal CA Assistant. I can help you analyze your expenses, provide financial advice, and answer questions about your spending patterns. How can I assist you today?",
+        "Hello! I'm your personal **CA Assistant** powered by AI 🤖\n\nI can help you with:\n- 📊 Analyzing your spending patterns\n- 💰 Tax-saving advice (GST, CGST, SGST)\n- 🎯 Budget planning and recommendations\n- 🧾 Bill-by-bill breakdowns\n- 💡 Personalized financial tips\n\nWhat would you like to know today?",
       timestamp: new Date(),
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [bills, setBills] = useState([]);
+  const [billCount, setBillCount] = useState(0);
+  const [dbStatus, setDbStatus] = useState("connecting");
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    fetchBills();
+    checkDbStatus();
   }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const fetchBills = async () => {
+  const checkDbStatus = async () => {
     try {
-      const response = await axios.get("API_ENDPOINTS.BILLS");
-      setBills(response.data);
+      const response = await axios.get(API_ENDPOINTS.BILLS);
+      setBillCount(response.data.length);
+      setDbStatus("connected");
     } catch (error) {
-      console.error("Error fetching bills:", error);
+      console.error("Error connecting to DB:", error);
+      setDbStatus("error");
     }
   };
 
@@ -41,194 +45,56 @@ const Chatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const analyzeSpending = () => {
-    const totalSpent = bills.reduce((sum, bill) => sum + (bill.total || 0), 0);
-    const categoryData = {};
-
-    bills.forEach((bill) => {
-      bill.items?.forEach((item) => {
-        const category = item.category || "others";
-        categoryData[category] =
-          (categoryData[category] || 0) + (item.price || 0);
+  const sendToApi = async (question) => {
+    try {
+      const response = await axios.post(API_ENDPOINTS.CHAT, {
+        message: question,
       });
-    });
-
-    const topCategory = Object.entries(categoryData).sort(
-      ([, a], [, b]) => b - a,
-    )[0];
-
-    return {
-      totalSpent,
-      totalBills: bills.length,
-      topCategory: topCategory ? topCategory[0] : "none",
-      topCategoryAmount: topCategory ? topCategory[1] : 0,
-      averageBill: bills.length > 0 ? totalSpent / bills.length : 0,
-      categoryData,
-    };
-  };
-
-  const generateResponse = (userMessage) => {
-    const lowerMessage = userMessage.toLowerCase();
-    const analysis = analyzeSpending();
-
-    // Spending analysis queries
-    if (
-      lowerMessage.includes("total") &&
-      (lowerMessage.includes("spent") || lowerMessage.includes("spending"))
-    ) {
-      return `You have spent a total of ${formatCurrency(analysis.totalSpent)} across ${analysis.totalBills} bills. Your average bill amount is ${formatCurrency(analysis.averageBill)}.`;
+      return response.data.response;
+    } catch (error) {
+      console.error("Chat API error:", error);
+      throw error;
     }
-
-    if (
-      lowerMessage.includes("category") ||
-      lowerMessage.includes("categories")
-    ) {
-      const categories = Object.entries(analysis.categoryData)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 3);
-
-      if (categories.length === 0) {
-        return "You don't have any categorized expenses yet. Upload some bills to get started!";
-      }
-
-      let response = "Here's your spending breakdown by category:\n\n";
-      categories.forEach(([category, amount], index) => {
-        response += `${index + 1}. ${category.charAt(0).toUpperCase() + category.slice(1)}: ${formatCurrency(amount)}\n`;
-      });
-
-      return (
-        response +
-        `\nYour highest spending category is ${analysis.topCategory} with ${formatCurrency(analysis.topCategoryAmount)}.`
-      );
-    }
-
-    if (
-      lowerMessage.includes("advice") ||
-      lowerMessage.includes("tips") ||
-      lowerMessage.includes("suggest")
-    ) {
-      if (analysis.totalSpent === 0) {
-        return "Upload some bills first so I can analyze your spending patterns and provide personalized advice!";
-      }
-
-      const advice = [
-        `💡 Your top spending category is ${analysis.topCategory} (${formatCurrency(analysis.topCategoryAmount)}). Consider setting a monthly budget for this category.`,
-        `📊 You have ${analysis.totalBills} bills with an average of ${formatCurrency(analysis.averageBill)} per bill.`,
-        `💰 Track your daily expenses to identify small purchases that add up over time.`,
-        `📱 Consider using digital payment methods to automatically track all your expenses.`,
-        `🎯 Set specific savings goals and allocate a portion of your income towards them.`,
-      ];
-
-      return advice.join("\n\n");
-    }
-
-    if (lowerMessage.includes("budget") || lowerMessage.includes("save")) {
-      const monthlySpending = analysis.totalSpent; // This could be refined to actual monthly data
-      const suggestedBudget = monthlySpending * 0.8; // Suggest 20% reduction
-
-      return `Based on your spending of ${formatCurrency(analysis.totalSpent)}, I suggest:\n\n💡 Set a monthly budget of ${formatCurrency(suggestedBudget)} (20% less than current spending)\n📊 Allocate 50% for needs, 30% for wants, 20% for savings\n🎯 Focus on reducing ${analysis.topCategory} expenses first\n💰 Track daily expenses to stay within budget`;
-    }
-
-    if (
-      lowerMessage.includes("expensive") ||
-      lowerMessage.includes("highest")
-    ) {
-      const expensiveBills = bills
-        .sort((a, b) => (b.total || 0) - (a.total || 0))
-        .slice(0, 3);
-
-      if (expensiveBills.length === 0) {
-        return "You don't have any bills uploaded yet. Upload some bills to see your highest expenses!";
-      }
-
-      let response = "Here are your most expensive bills:\n\n";
-      expensiveBills.forEach((bill, index) => {
-        response += `${index + 1}. ${bill.vendor || "Unknown Vendor"}: ${formatCurrency(bill.total)} (${bill.date ? new Date(bill.date).toLocaleDateString() : "No date"})\n`;
-      });
-
-      return response;
-    }
-
-    if (lowerMessage.includes("recent") || lowerMessage.includes("latest")) {
-      const recentBills = bills
-        .filter((bill) => bill.date)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5);
-
-      if (recentBills.length === 0) {
-        return "You don't have any recent bills. Upload some bills to track your latest expenses!";
-      }
-
-      let response = "Here are your recent expenses:\n\n";
-      recentBills.forEach((bill, index) => {
-        response += `${index + 1}. ${bill.vendor || "Unknown"}: ${formatCurrency(bill.total)} (${new Date(bill.date).toLocaleDateString()})\n`;
-      });
-
-      return response;
-    }
-
-    // Default responses for common greetings and questions
-    if (
-      lowerMessage.includes("hello") ||
-      lowerMessage.includes("hi") ||
-      lowerMessage.includes("hey")
-    ) {
-      return "Hello! I'm here to help you manage your finances better. You can ask me about your spending patterns, get budgeting advice, or analyze your expenses by category. What would you like to know?";
-    }
-
-    if (
-      lowerMessage.includes("help") ||
-      lowerMessage.includes("what can you do")
-    ) {
-      return `I can help you with:\n\n📊 Analyze your spending patterns\n💰 Provide budgeting advice\n🏷️ Break down expenses by category\n📈 Show your most expensive purchases\n💡 Suggest ways to save money\n📱 Track your financial goals\n\nJust ask me questions like "What's my total spending?" or "Give me some budgeting tips!"`;
-    }
-
-    // Default response
-    return "I understand you're asking about your finances. I can help you analyze spending, provide budgeting advice, or break down your expenses by category. Could you be more specific about what you'd like to know? For example, try asking 'What's my total spending?' or 'Give me some budgeting advice.'";
   };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
+    const currentMessage = inputMessage;
     const userMessage = {
       id: Date.now(),
       type: "user",
-      content: inputMessage,
+      content: currentMessage,
       timestamp: new Date(),
     };
 
-    const currentMessage = inputMessage;
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsTyping(true);
 
     try {
-      // Try to get AI response from backend
-      const response = await axios.post("API_ENDPOINTS.CHAT", {
-        message: currentMessage,
-        bills: bills,
-      });
-
-      const botResponse = {
-        id: Date.now() + 1,
-        type: "bot",
-        content: response.data.response,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, botResponse]);
+      const reply = await sendToApi(currentMessage);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "bot",
+          content: reply,
+          timestamp: new Date(),
+        },
+      ]);
+      checkDbStatus();
     } catch (error) {
-      console.error("Chat API error:", error);
-
-      // Fallback to local response
-      const botResponse = {
-        id: Date.now() + 1,
-        type: "bot",
-        content: generateResponse(currentMessage),
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, botResponse]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "bot",
+          content:
+            "⚠️ I'm having trouble connecting to the server. Please make sure the backend is running on port 5000 and try again.",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsTyping(false);
     }
@@ -241,132 +107,213 @@ const Chatbot = () => {
     }
   };
 
+  const handleQuickQuestion = async (question) => {
+    if (isTyping) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: "user",
+      content: question,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsTyping(true);
+
+    try {
+      const reply = await sendToApi(question);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "bot",
+          content: reply,
+          timestamp: new Date(),
+        },
+      ]);
+      checkDbStatus();
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "bot",
+          content: "⚠️ Server error. Please try again.",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const clearChat = () => {
+    setMessages([
+      {
+        id: Date.now(),
+        type: "bot",
+        content: "Chat cleared! How can I help you with your finances today? 😊",
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
   const quickQuestions = [
     "What's my total spending?",
-    "Show me spending by category",
+    "Show spending by category",
+    "How much tax have I paid?",
+    "Which vendor do I spend most at?",
     "Give me budgeting advice",
-    "What are my most expensive bills?",
-    "Show recent expenses",
+    "How can I save money?",
+    "Show my most expensive bills",
+    "What are my recent expenses?",
   ];
 
-  const handleQuickQuestion = (question) => {
-    setInputMessage(question);
-    setTimeout(() => handleSendMessage(), 100);
+  const statusColors = {
+    connecting: "bg-yellow-500",
+    connected: "bg-green-500",
+    error: "bg-red-500",
+  };
+  const statusLabels = {
+    connecting: "Connecting...",
+    connected: `Online · ${billCount} bill${billCount !== 1 ? "s" : ""} active`,
+    error: "Connection Error",
+  };
+
+  const mdComponents = {
+    h1: ({ node, ...props }) => (
+      <h1 className="text-lg font-bold mt-2 mb-1 text-blue-300" {...props} />
+    ),
+    h2: ({ node, ...props }) => (
+      <h2 className="text-base font-bold mt-2 mb-1 text-blue-300" {...props} />
+    ),
+    h3: ({ node, ...props }) => (
+      <h3 className="text-sm font-bold mt-1 mb-1 text-blue-300" {...props} />
+    ),
+    p: ({ node, ...props }) => (
+      <p className="mb-2 leading-relaxed" {...props} />
+    ),
+    ul: ({ node, ...props }) => (
+      <ul className="list-disc ml-4 mb-2" {...props} />
+    ),
+    ol: ({ node, ...props }) => (
+      <ol className="list-decimal ml-4 mb-2" {...props} />
+    ),
+    li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+    table: ({ node, ...props }) => (
+      <table
+        className="border-collapse border border-gray-600 my-2 text-xs w-full"
+        {...props}
+      />
+    ),
+    thead: ({ node, ...props }) => (
+      <thead className="bg-gray-700" {...props} />
+    ),
+    th: ({ node, ...props }) => (
+      <th
+        className="border border-gray-600 px-2 py-1 font-semibold text-left text-blue-300"
+        {...props}
+      />
+    ),
+    td: ({ node, ...props }) => (
+      <td className="border border-gray-600 px-2 py-1" {...props} />
+    ),
+    strong: ({ node, ...props }) => (
+      <strong className="font-bold text-blue-300" {...props} />
+    ),
+    em: ({ node, ...props }) => (
+      <em className="italic text-gray-300" {...props} />
+    ),
+    code: ({ node, inline, ...props }) =>
+      inline ? (
+        <code
+          className="bg-gray-800 px-1 rounded text-xs text-green-300"
+          {...props}
+        />
+      ) : (
+        <code
+          className="block bg-gray-800 p-2 rounded my-1 text-xs overflow-x-auto text-green-300"
+          {...props}
+        />
+      ),
+    blockquote: ({ node, ...props }) => (
+      <blockquote
+        className="border-l-4 border-blue-500 pl-3 italic text-gray-400 my-2"
+        {...props}
+      />
+    ),
+    hr: () => <hr className="border-gray-600 my-2" />,
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn h-full flex flex-col">
+    <div className="space-y-4 animate-fadeIn h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-theme-primary">
-            CA Assistant
-          </h1>
+          <h1 className="text-3xl font-bold text-theme-primary">CA Assistant</h1>
           <p className="text-theme-secondary mt-1">
-            Your personal financial advisor powered by AI
+            Your personal financial advisor
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-green-400 text-sm font-medium">Online</span>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={clearChat}
+            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors"
+          >
+            Clear Chat
+          </button>
+          <div className="flex items-center space-x-2">
+            <div
+              className={`w-3 h-3 ${statusColors[dbStatus]} rounded-full ${
+                dbStatus === "connected" ? "animate-pulse" : ""
+              }`}
+            />
+            <span
+              className={`text-sm font-medium ${
+                dbStatus === "error"
+                  ? "text-red-400"
+                  : dbStatus === "connected"
+                  ? "text-green-400"
+                  : "text-yellow-400"
+              }`}
+            >
+              {statusLabels[dbStatus]}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Chat Container */}
-      <div className="flex-1 bg-[#161b22] rounded-xl border border-[#30363d] flex flex-col">
+      <div
+        className="bg-[#161b22] rounded-xl border border-[#30363d] flex flex-col"
+        style={{ height: "65vh" }}
+      >
         {/* Messages */}
-        <div className="flex-1 p-6 overflow-y-auto max-h-96">
+        <div className="flex-1 p-6 overflow-y-auto">
           <div className="space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${
+                  message.type === "user" ? "justify-end" : "justify-start"
+                }`}
               >
+                {message.type === "bot" && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-sm mr-2 flex-shrink-0 mt-1">
+                    🤖
+                  </div>
+                )}
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+                  className={`max-w-xs lg:max-w-2xl px-4 py-3 rounded-2xl ${
                     message.type === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-700 text-gray-100"
+                      ? "bg-blue-600 text-white rounded-tr-sm"
+                      : "bg-[#21262d] text-gray-100 rounded-tl-sm border border-[#30363d]"
                   }`}
                 >
                   {message.type === "bot" ? (
                     <div className="text-sm prose prose-invert prose-sm max-w-none">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
-                        components={{
-                          h1: ({ node, ...props }) => (
-                            <h1
-                              className="text-lg font-bold mt-2 mb-1"
-                              {...props}
-                            />
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              className="text-base font-bold mt-2 mb-1"
-                              {...props}
-                            />
-                          ),
-                          h3: ({ node, ...props }) => (
-                            <h3
-                              className="text-sm font-bold mt-1 mb-1"
-                              {...props}
-                            />
-                          ),
-                          p: ({ node, ...props }) => (
-                            <p className="mb-2 leading-relaxed" {...props} />
-                          ),
-                          ul: ({ node, ...props }) => (
-                            <ul className="list-disc ml-4 mb-2" {...props} />
-                          ),
-                          ol: ({ node, ...props }) => (
-                            <ol className="list-decimal ml-4 mb-2" {...props} />
-                          ),
-                          li: ({ node, ...props }) => (
-                            <li className="mb-1" {...props} />
-                          ),
-                          table: ({ node, ...props }) => (
-                            <table
-                              className="border-collapse border border-gray-600 my-2 text-xs w-full"
-                              {...props}
-                            />
-                          ),
-                          thead: ({ node, ...props }) => (
-                            <thead className="bg-gray-600" {...props} />
-                          ),
-                          th: ({ node, ...props }) => (
-                            <th
-                              className="border border-gray-600 px-2 py-1 font-semibold text-left"
-                              {...props}
-                            />
-                          ),
-                          td: ({ node, ...props }) => (
-                            <td
-                              className="border border-gray-600 px-2 py-1"
-                              {...props}
-                            />
-                          ),
-                          strong: ({ node, ...props }) => (
-                            <strong
-                              className="font-bold text-blue-300"
-                              {...props}
-                            />
-                          ),
-                          em: ({ node, ...props }) => (
-                            <em className="italic" {...props} />
-                          ),
-                          code: ({ node, inline, ...props }) =>
-                            inline ? (
-                              <code
-                                className="bg-gray-800 px-1 rounded text-xs"
-                                {...props}
-                              />
-                            ) : (
-                              <code
-                                className="block bg-gray-800 p-2 rounded my-1 text-xs overflow-x-auto"
-                                {...props}
-                              />
-                            ),
-                        }}
+                        components={mdComponents}
                       >
                         {message.content}
                       </ReactMarkdown>
@@ -376,29 +323,40 @@ const Chatbot = () => {
                       {message.content}
                     </p>
                   )}
-                  <p className="text-xs opacity-70 mt-1">
+                  <p className="text-xs opacity-50 mt-1 text-right">
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </p>
                 </div>
+                {message.type === "user" && (
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm ml-2 flex-shrink-0 mt-1">
+                    👤
+                  </div>
+                )}
               </div>
             ))}
 
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-gray-700 text-gray-100 px-4 py-3 rounded-lg">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-sm mr-2 flex-shrink-0">
+                  🤖
+                </div>
+                <div className="bg-[#21262d] text-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm border border-[#30363d]">
+                  <div className="flex space-x-1 items-center">
+                    <span className="text-xs text-gray-400 mr-2">
+                      Analyzing your data
+                    </span>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.1s" }}
-                    ></div>
+                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.15s" }}
+                    />
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
+                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.3s" }}
+                    />
                   </div>
                 </div>
               </div>
@@ -408,14 +366,15 @@ const Chatbot = () => {
         </div>
 
         {/* Quick Questions */}
-        <div className="p-4 border-t border-gray-700">
-          <p className="text-gray-400 text-sm mb-3">Quick questions:</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="px-4 pt-3 pb-1 border-t border-[#30363d]">
+          <p className="text-gray-500 text-xs mb-2">Quick questions:</p>
+          <div className="flex flex-wrap gap-1.5">
             {quickQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => handleQuickQuestion(question)}
-                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-full transition-colors"
+                disabled={isTyping}
+                className="px-2.5 py-1 bg-[#21262d] hover:bg-[#2d333b] disabled:opacity-40 text-gray-300 text-xs rounded-full transition-colors border border-[#30363d] hover:border-blue-500"
               >
                 {question}
               </button>
@@ -424,66 +383,66 @@ const Chatbot = () => {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-[#30363d]">
           <div className="flex space-x-3">
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask me about your finances..."
-              className="flex-1 p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              rows="1"
+              placeholder="Ask me about your finances... (Enter to send, Shift+Enter for new line)"
+              className="flex-1 p-3 bg-[#0d1117] border border-[#30363d] rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+              rows="2"
             />
             <button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isTyping}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition-colors font-medium"
             >
-              Send
+              {isTyping ? "..." : "Send ↵"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Features */}
+      {/* Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#161b22] p-4 rounded-lg border border-[#30363d]">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-[#f0f6fc]">📊</span>
-            </div>
-            <div>
-              <h3 className="text-[#f0f6fc] font-medium">Expense Analysis</h3>
-              <p className="text-[#8b949e] text-sm">
-                Get detailed spending insights
-              </p>
-            </div>
+        <div className="bg-[#161b22] p-4 rounded-lg border border-[#30363d] flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-600/20 border border-blue-600/40 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+            📊
+          </div>
+          <div>
+            <h3 className="text-[#f0f6fc] font-medium text-sm">
+              Real-time Insights
+            </h3>
+            <p className="text-[#8b949e] text-xs">
+              Up-to-date data from your bills
+            </p>
           </div>
         </div>
-
-        <div className="bg-[#161b22] p-4 rounded-lg border border-[#30363d]">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-              <span className="text-[#f0f6fc]">💡</span>
-            </div>
-            <div>
-              <h3 className="text-[#f0f6fc] font-medium">Smart Advice</h3>
-              <p className="text-[#8b949e] text-sm">
-                Personalized financial tips
-              </p>
-            </div>
+        <div className="bg-[#161b22] p-4 rounded-lg border border-[#30363d] flex items-center space-x-3">
+          <div className="w-10 h-10 bg-green-600/20 border border-green-600/40 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+            💡
+          </div>
+          <div>
+            <h3 className="text-[#f0f6fc] font-medium text-sm">
+              AI-Powered Advice
+            </h3>
+            <p className="text-[#8b949e] text-xs">
+              Tax savings &amp; budget planning
+            </p>
           </div>
         </div>
-
-        <div className="bg-[#161b22] p-4 rounded-lg border border-[#30363d]">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-[#f0f6fc]">🎯</span>
-            </div>
-            <div>
-              <h3 className="text-[#f0f6fc] font-medium">Budget Planning</h3>
-              <p className="text-[#8b949e] text-sm">Create effective budgets</p>
-            </div>
+        <div className="bg-[#161b22] p-4 rounded-lg border border-[#30363d] flex items-center space-x-3">
+          <div className="w-10 h-10 bg-purple-600/20 border border-purple-600/40 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+            🇮🇳
+          </div>
+          <div>
+            <h3 className="text-[#f0f6fc] font-medium text-sm">
+              Indian Tax Laws
+            </h3>
+            <p className="text-[#8b949e] text-xs">
+              GST, CGST, SGST expertise
+            </p>
           </div>
         </div>
       </div>
@@ -492,4 +451,3 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
-
